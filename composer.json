@@ -30,11 +30,11 @@
     },
     "autoload": {
         "psr-4": {
-          "pdaleramirez\\superpaymentadjuster\\": "src/"
+          "pdaleramirez\\commercepaymongo\\": "src/"
         }
     },
     "extra": {
-        "name": "Super Payment Adjuster",
+        "name": "Commerce PayMongo",
         "handle": "commerce-paymongo",
         "developer": "Dale Ramirez",
         "developerUrl": "https://github.com/pdaleramirez",

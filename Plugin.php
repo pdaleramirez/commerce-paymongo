@@ -1,5 +1,7 @@
 <?php
 
+namespace pdaleramirez\commercepaymongo;
+
 use craft\base\Plugin as BasePlugin;
 
 class Plugin extends BasePlugin
