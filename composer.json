@@ -1,0 +1,55 @@
+{
+    "name": "pdaleramirez/commerce-paymongo",
+    "description": "PayMongo payment gateway integration.",
+    "type": "craft-plugin",
+    "version": "1.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin"
+    ],
+    "support": {
+        "docs": "https://github.com/pdaleramirez/commerce-paymongo/blob/master/README.md",
+        "issues": "https://github.com/pdaleramirez/commerce-paymongo/issues"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dale Ramirez",
+            "homepage": "https://github.com/pdaleramirez"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^4.0"
+    },
+    "require-dev": {
+      "craftcms/cms": "^4.0",
+      "codeception/codeception": "^3.0",
+      "vlucas/phpdotenv": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+          "pdaleramirez\\superpaymentadjuster\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Super Payment Adjuster",
+        "handle": "commerce-paymongo",
+        "developer": "Dale Ramirez",
+        "developerUrl": "https://github.com/pdaleramirez",
+        "documentationUrl": "https://github.com/pdaleramirez/commerce-paymongo/blob/master/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/pdaleramirez/commerce-paymongo/master/CHANGELOG.md",
+        "class": "pdaleramirez\\superpaymentadjuster\\SuperPaymentAdjuster"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.0.2"
+        },
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true,
+            "craftcms/plugin-installer": true
+        }
+    }
+}
