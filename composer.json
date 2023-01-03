@@ -40,7 +40,7 @@
         "developerUrl": "https://github.com/pdaleramirez",
         "documentationUrl": "https://github.com/pdaleramirez/commerce-paymongo/blob/master/README.md",
         "changelogUrl": "https://raw.githubusercontent.com/pdaleramirez/commerce-paymongo/master/CHANGELOG.md",
-        "class": "pdaleramirez\\superpaymentadjuster\\SuperPaymentAdjuster"
+        "class": "pdaleramirez\\commercepaymongo\\Plugin"
     },
     "config": {
         "sort-packages": true,
