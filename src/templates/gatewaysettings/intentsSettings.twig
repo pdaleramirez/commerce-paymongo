@@ -1,0 +1,28 @@
+{% from "_includes/forms" import textField, lightswitchField, selectField, autosuggestField %}
+
+{{ autosuggestField({
+  label: 'Api Key'|t('depotise-module'),
+  id: 'apiKey',
+  class: 'ltr',
+  name: 'apiKey',
+  suggestEnvVars: true,
+  value: gateway.apiKey,
+  errors: gateway.getErrors('depotise-module')
+}) }}
+
+{{ autosuggestField({
+  label: "Secret"|t('depotise-module'),
+  id: 'secret',
+  class: 'ltr',
+  name: 'secret',
+  suggestEnvVars: true,
+  value: gateway.secret,
+  errors: gateway.getErrors('secret')
+}) }}
+
+{{ lightswitchField({
+  label: "Test mode?"|t('depotise-module'),
+  name: 'testMode',
+  on: gateway.testMode,
+  errors: gateway.getErrors('testMode'),
+}) }}

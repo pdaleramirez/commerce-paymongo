@@ -7,10 +7,14 @@ use craft\commerce\services\Gateways;
 use craft\commerce\stripe\gateways\PaymentIntents;
 use craft\events\RegisterComponentTypesEvent;
 use pdaleramirez\commercepaymongo\gateways\PayMongo;
+use pdaleramirez\commercepaymongo\plugin\Services;
+use pdaleramirez\commercepaymongo\services\Payment;
 use yii\base\Event;
 
 class Plugin extends BasePlugin
 {
+    use Services;
+
     /**
      * @inheritDoc
      */
@@ -27,5 +31,14 @@ class Plugin extends BasePlugin
                 $event->types[] = PayMongo::class;
             }
         );
+    }
+
+    public static function config(): array
+    {
+        return [
+          'components' => [
+              'payment' => ['class' => Payment::class],
+          ]
+        ];
     }
 }

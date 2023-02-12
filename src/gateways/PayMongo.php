@@ -19,16 +19,19 @@ use craft\commerce\models\payments\DummyPaymentForm;
 use craft\commerce\models\PaymentSource;
 use craft\commerce\models\responses\Dummy as DummyRequestResponse;
 use craft\commerce\models\responses\DummySubscriptionResponse;
+use pdaleramirez\commercepaymongo\models\responses\PayMongoRequestResponse;
 use craft\commerce\models\subscriptions\CancelSubscriptionForm;
 use craft\commerce\models\subscriptions\DummyPlan;
 use craft\commerce\models\subscriptions\SubscriptionForm;
 use craft\commerce\models\subscriptions\SwitchPlansForm;
 use craft\commerce\models\Transaction;
 use craft\elements\User;
+use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\web\Response as WebResponse;
 use craft\web\View;
 use http\Exception\InvalidArgumentException;
+use pdaleramirez\commercepaymongo\Plugin;
 use yii\base\NotSupportedException;
 
 /**
@@ -40,6 +43,20 @@ use yii\base\NotSupportedException;
 class PayMongo extends SubscriptionGateway
 {
     /**
+     * @var string
+     */
+    public $apiKey;
+
+    /**
+     * @var string
+     */
+    public $secret;
+
+    /**
+     * @var string
+     */
+    public $testMode;
+    /**
      * @inheritdoc
      */
     public function getPaymentFormHtml(array $params): ?string
@@ -49,8 +66,8 @@ class PayMongo extends SubscriptionGateway
         if (Craft::$app->getConfig()->general->devMode) {
             $paymentFormModel->firstName = 'Jenny';
             $paymentFormModel->lastName = 'Andrews';
-            $paymentFormModel->number = '4242424242424242';
-            $paymentFormModel->expiry = '01/2023';
+            $paymentFormModel->number = '4343434343434345';
+            $paymentFormModel->expiry = '01/2025';
             $paymentFormModel->cvv = '123';
         }
 
@@ -75,6 +92,14 @@ class PayMongo extends SubscriptionGateway
     public function getPaymentFormModel(): DummyPaymentForm
     {
         return new DummyPaymentForm();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getSettingsHtml(): ?string
+    {
+        return Craft::$app->getView()->renderTemplate('commerce-paymongo/gatewaysettings/intentsSettings', ['gateway' => $this]);
     }
 
     /**
@@ -143,11 +168,53 @@ class PayMongo extends SubscriptionGateway
      */
     public function purchase(Transaction $transaction, BasePaymentForm $form): RequestResponseInterface
     {
+        Plugin::getInstance()->getPayment()->setSecretKey($this->secret);
+
+        $expiry = explode('/', $form->expiry);
+
+        $details = [
+            'card_number' => $form->number,
+            'exp_month' => (int) $expiry[0],
+            'exp_year' => (int) $expiry[1],
+            'cvc' => $form->cvv
+        ];
+
+        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_methods', [
+            'attributes' => [
+                'type' => 'card',
+                'details' => $details
+            ]
+        ]);
+        $paymentMethodContent = Json::decode($response->getBody()->getContents());
+        $paymentMethodId = $paymentMethodContent['data']['id'];
+
+        $amount = number_format($transaction->amount, 2, '', '');
+
+        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents', [
+            'attributes' => [
+                'amount' => (int)$amount,
+                'payment_method_allowed' => ['card'],
+                'currency' => 'PHP'
+            ]
+        ]);
+
+        $paymentIntentContent = Json::decode($response->getBody()->getContents());;
+        $paymentIntentId = $paymentIntentContent['data']['id'];
+        $paymentIntentClientKey = $paymentIntentContent['data']['attributes']['client_key'];
+
+        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents/' . $paymentIntentId . '/attach', [
+            'attributes' => [
+                'payment_method' => $paymentMethodId
+            ]
+        ]);
+
+        $paymentMethodContent = Json::decode($response->getBody()->getContents());
+
         if (!$form instanceof CreditCardPaymentForm) {
             throw new InvalidArgumentException(sprintf('%s only accepts %s objects passed to $form.', __METHOD__, CreditCardPaymentForm::class));
         }
 
-        return new DummyRequestResponse($form);
+        return new PayMongoRequestResponse([]);
     }
 
     /**
