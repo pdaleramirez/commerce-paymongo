@@ -32,6 +32,7 @@ use craft\web\Response as WebResponse;
 use craft\web\View;
 use http\Exception\InvalidArgumentException;
 use pdaleramirez\commercepaymongo\Plugin;
+use pdaleramirez\commercepaymongo\web\assets\VueAsset;
 use yii\base\NotSupportedException;
 
 /**
@@ -61,6 +62,8 @@ class PayMongo extends SubscriptionGateway
      */
     public function getPaymentFormHtml(array $params): ?string
     {
+       Craft::$app->getView()->registerAssetBundle(VueAsset::class);
+
         $paymentFormModel = $this->getPaymentFormModel();
 
         if (Craft::$app->getConfig()->general->devMode) {
@@ -80,7 +83,9 @@ class PayMongo extends SubscriptionGateway
         $view = Craft::$app->getView();
         $previousMode = $view->getTemplateMode();
         $view->setTemplateMode(View::TEMPLATE_MODE_CP);
-        $html = Craft::$app->getView()->renderTemplate('commerce/_components/gateways/_creditCardFields', $params);
+
+        $html = Craft::$app->getView()->renderTemplate('commerce-paymongo/_components/gateways/_creditCardFields', $params);
+
         $view->setTemplateMode($previousMode);
 
         return $html;
