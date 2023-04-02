@@ -19,6 +19,7 @@ use craft\commerce\models\payments\DummyPaymentForm;
 use craft\commerce\models\PaymentSource;
 use craft\commerce\models\responses\Dummy as DummyRequestResponse;
 use craft\commerce\models\responses\DummySubscriptionResponse;
+use craft\helpers\UrlHelper;
 use pdaleramirez\commercepaymongo\models\responses\PayMongoRequestResponse;
 use craft\commerce\models\subscriptions\CancelSubscriptionForm;
 use craft\commerce\models\subscriptions\DummyPlan;
@@ -69,7 +70,7 @@ class PayMongo extends SubscriptionGateway
         if (Craft::$app->getConfig()->general->devMode) {
             $paymentFormModel->firstName = 'Jenny';
             $paymentFormModel->lastName = 'Andrews';
-            $paymentFormModel->number = '4343434343434345';
+            $paymentFormModel->number = '5234000000000106';
             $paymentFormModel->expiry = '01/2025';
             $paymentFormModel->cvv = '123';
         }
@@ -116,7 +117,7 @@ class PayMongo extends SubscriptionGateway
             throw new InvalidArgumentException(sprintf('%s only accepts %s objects passed to $form.', __METHOD__, CreditCardPaymentForm::class));
         }
 
-        return new DummyRequestResponse($form);
+        return new PayMongoRequestResponse();
     }
 
     /**
@@ -124,7 +125,7 @@ class PayMongo extends SubscriptionGateway
      */
     public function capture(Transaction $transaction, string $reference): RequestResponseInterface
     {
-        return new DummyRequestResponse();
+        return new PayMongoRequestResponse();
     }
 
     /**
@@ -132,7 +133,7 @@ class PayMongo extends SubscriptionGateway
      */
     public function completeAuthorize(Transaction $transaction): RequestResponseInterface
     {
-        return new DummyRequestResponse();
+        return new PayMongoRequestResponse();
     }
 
     /**
@@ -140,7 +141,18 @@ class PayMongo extends SubscriptionGateway
      */
     public function completePurchase(Transaction $transaction): RequestResponseInterface
     {
-        return new DummyRequestResponse();
+
+        $transactionDecode = Json::decode($transaction->response);
+
+        Plugin::getInstance()->getPayment()->setSecretKey($this->secret);
+        Plugin::getInstance()->getPayment()->setClientKey($transactionDecode['attributes']['client_key']);
+        $paymentIntent = Plugin::getInstance()->getPayment()->getPaymentIntent($transactionDecode['id']);
+        $paymentMethodContent = Json::decode($paymentIntent->getBody()->getContents());
+
+        $status = $paymentMethodContent['data']['attributes']['status'];
+
+
+        return new PayMongoRequestResponse($paymentMethodContent['data']);
     }
 
     /**
@@ -205,21 +217,31 @@ class PayMongo extends SubscriptionGateway
 
         $paymentIntentContent = Json::decode($response->getBody()->getContents());;
         $paymentIntentId = $paymentIntentContent['data']['id'];
+
+        Craft::$app->getSession()->set('payMongoPaymentIntentId', $paymentIntentId);
         $paymentIntentClientKey = $paymentIntentContent['data']['attributes']['client_key'];
 
         $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents/' . $paymentIntentId . '/attach', [
             'attributes' => [
-                'payment_method' => $paymentMethodId
+                'payment_method' => $paymentMethodId,
+                'return_url' => UrlHelper::actionUrl('commerce/payments/complete-payment', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]),
             ]
         ]);
 
         $paymentMethodContent = Json::decode($response->getBody()->getContents());
+        $paymentMethodContentData = $paymentMethodContent['data'];
+        $status = $paymentMethodContentData['attributes']['status'];
+
+        if ($status === 'awaiting_next_action') {
+
+            return new PayMongoRequestResponse($paymentMethodContentData);
+        }
 
         if (!$form instanceof CreditCardPaymentForm) {
             throw new InvalidArgumentException(sprintf('%s only accepts %s objects passed to $form.', __METHOD__, CreditCardPaymentForm::class));
         }
 
-        return new PayMongoRequestResponse([]);
+        return new PayMongoRequestResponse($paymentMethodContentData);
     }
 
     /**

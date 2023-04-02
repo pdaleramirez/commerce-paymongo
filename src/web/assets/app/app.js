@@ -19751,7 +19751,35 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  name: "PaymentForm"
+  name: "PaymentForm",
+  props: {
+    orderData: Object
+  },
+  data: function data() {
+    return {
+      firstName: null,
+      lastName: null,
+      cardDetails: {
+        number: null,
+        month: null,
+        year: null,
+        cvc: null
+      }
+    };
+  },
+  methods: {
+    submitForm: function submitForm() {
+      var self = this;
+      axios.post("/actions/commerce/payments/pay", this.cardDetails, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }).then(function (response) {
+        console.log(response);
+      })["catch"](function (error) {});
+    }
+  }
 });
 
 /***/ }),
@@ -19772,38 +19800,117 @@ __webpack_require__.r(__webpack_exports__);
 var _hoisted_1 = {
   "class": "gateway-payment-form max-w-3/4"
 };
-var _hoisted_2 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<fieldset class=\"card-holder\"><h1>Paymongo Form</h1><legend>Card Holder</legend><div class=\"md:flex md:-mx-4\"><!-- Card Holder Name --><div class=\"md:w-1/2 md:mx-4 my-2\"><input type=\"text\" class=\"card-holder-first-name text fullwidth\" name=\"firstName\" value=\"Jenny\" maxlength=\"70\" autocomplete=\"off\" placeholder=\"First Name\" dir=\"ltr\"></div><div class=\"md:w-1/2 md:mx-4 my-2\"><input type=\"text\" class=\"card-holder-last-name text fullwidth\" name=\"lastName\" value=\"Andrews\" maxlength=\"70\" autocomplete=\"off\" placeholder=\"Last Name\" dir=\"ltr\"></div></div></fieldset>", 1);
-var _hoisted_3 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("fieldset", {
-  "class": "card-data"
-}, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("legend", null, "Card"), /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-  type: "text",
-  "class": "card-number text fullwidth",
-  name: "number",
-  value: "4343434343434345",
-  maxlength: "19",
-  autocomplete: "off",
-  placeholder: "Card Number",
-  dir: "ltr"
-})]), /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-  type: "text",
-  "class": "card-expiry text fullwidth",
-  name: "expiry",
-  value: "01/2025",
-  autocomplete: "off",
-  placeholder: "MM / YYYY",
-  dir: "ltr"
-}), /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-  type: "tel",
-  "class": "card-cvc text fullwidth",
-  name: "cvv",
-  value: "123",
-  autocomplete: "off",
-  placeholder: "CVV",
-  dir: "ltr"
-})])])], -1 /* HOISTED */);
+var _hoisted_2 = {
+  "class": "card-holder"
+};
+var _hoisted_3 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h1", null, "Paymongo Form", -1 /* HOISTED */);
+var _hoisted_4 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("legend", null, "Card Holder", -1 /* HOISTED */);
+var _hoisted_5 = {
+  "class": "md:flex md:-mx-4"
+};
+var _hoisted_6 = {
+  "class": "md:w-1/2 md:mx-4 my-2"
+};
+var _hoisted_7 = {
+  "class": "md:w-1/2 md:mx-4 my-2"
+};
+var _hoisted_8 = {
+  ref: "mainForm",
+  id: "main-form"
+};
+var _hoisted_9 = {
+  "class": "form-row"
+};
+var _hoisted_10 = {
+  "class": "col-xs-12 form-group required"
+};
+var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "class": "control-label"
+}, "Card Number", -1 /* HOISTED */);
+var _hoisted_12 = {
+  "class": "form-row"
+};
+var _hoisted_13 = {
+  "class": "col-xs-4 form-group expiration required"
+};
+var _hoisted_14 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "class": "control-label"
+}, "Expiration", -1 /* HOISTED */);
+var _hoisted_15 = {
+  "class": "col-xs-4 form-group expiration required"
+};
+var _hoisted_16 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "class": "control-label"
+}, " ", -1 /* HOISTED */);
+var _hoisted_17 = {
+  "class": "col-xs-4 form-group cvc required"
+};
+var _hoisted_18 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "class": "control-label"
+}, "CVC", -1 /* HOISTED */);
 
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [_hoisted_2, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Card Number "), _hoisted_3]);
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("fieldset", _hoisted_2, [_hoisted_3, _hoisted_4, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($props.orderData.gatewayId) + " ", 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Card Holder Name "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "text",
+    "class": "card-holder-first-name text fullwidth",
+    "onUpdate:modelValue": _cache[0] || (_cache[0] = function ($event) {
+      return $data.firstName = $event;
+    }),
+    maxlength: "70",
+    autocomplete: "off",
+    placeholder: "First Name",
+    dir: "ltr"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.firstName]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "text",
+    "class": "card-holder-last-name text fullwidth",
+    "onUpdate:modelValue": _cache[1] || (_cache[1] = function ($event) {
+      return $data.lastName = $event;
+    }),
+    maxlength: "70",
+    autocomplete: "off",
+    placeholder: "Last Name",
+    dir: "ltr"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.lastName]])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [_hoisted_11, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) {
+      return $data.cardDetails.number = $event;
+    }),
+    autocomplete: "off",
+    "class": "form-control card-number",
+    size: "40",
+    type: "text"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.cardDetails.number]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_13, [_hoisted_14, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) {
+      return $data.cardDetails.month = $event;
+    }),
+    "class": "form-control card-expiry-month",
+    placeholder: "MM",
+    size: "2",
+    type: "text"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.cardDetails.month]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [_hoisted_16, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) {
+      return $data.cardDetails.year = $event;
+    }),
+    "class": "form-control card-expiry-year",
+    placeholder: "YYYY",
+    size: "4",
+    type: "text"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.cardDetails.year]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, [_hoisted_18, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "onUpdate:modelValue": _cache[5] || (_cache[5] = function ($event) {
+      return $data.cardDetails.cvc = $event;
+    }),
+    autocomplete: "off",
+    "class": "form-control card-cvc",
+    placeholder: "ex. 311",
+    size: "3",
+    type: "text"
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.cardDetails.cvc]])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "button",
+    "class": "btn btn-lg",
+    onClick: _cache[6] || (_cache[6] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+      return $options.submitForm();
+    }, ["prevent"])),
+    value: "Make Payment"
+  })])], 512 /* NEED_PATCH */)]);
 }
 
 /***/ }),

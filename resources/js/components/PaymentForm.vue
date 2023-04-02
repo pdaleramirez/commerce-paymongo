@@ -3,19 +3,19 @@
     <fieldset class="card-holder">
       <h1>Paymongo Form</h1>
       <legend>Card Holder</legend>
-
+{{ orderData.gatewayId }}
       <div class="md:flex md:-mx-4">
         <!-- Card Holder Name -->
         <div class="md:w-1/2 md:mx-4 my-2">
           <input type="text" class="card-holder-first-name text fullwidth"
-                 name="firstName"
-                 value="" maxlength="70"
+                 v-model="firstName"
+                 maxlength="70"
                  autocomplete="off" placeholder="First Name" dir="ltr">
         </div>
 
         <div class="md:w-1/2 md:mx-4 my-2">
           <input type="text" class="card-holder-last-name text fullwidth"
-                 name="lastName" value=""
+                 v-model="lastName"
                  maxlength="70" autocomplete="off"
                  placeholder="Last Name" dir="ltr">
         </div>
@@ -25,37 +25,67 @@
 
     </fieldset>
 
-    <!-- Card Number -->
-    <fieldset class="card-data">
-      <legend>Card</legend>
-
+    <form ref="mainForm" id="main-form">
       <div>
-        <div>
-          <input type="text" class="card-number text fullwidth" name="number" value="4343434343434345" maxlength="19" autocomplete="off" placeholder="Card Number" dir="ltr">
-
+        <div class='form-row'>
+          <div class='col-xs-12 form-group required'>
+            <label class='control-label'>Card Number</label>
+            <input v-model="cardDetails.number" autocomplete='off' class='form-control card-number' size='40' type='text'>
+          </div>
+        </div>
+        <div class='form-row'>
+          <div class='col-xs-4 form-group expiration required'>
+            <label class='control-label'>Expiration</label>
+            <input v-model="cardDetails.month" class='form-control card-expiry-month' placeholder='MM' size='2' type='text'>
+          </div>
+          <div class='col-xs-4 form-group expiration required'>
+            <label class='control-label'>&nbsp;</label>
+            <input  v-model="cardDetails.year" class='form-control card-expiry-year' placeholder='YYYY' size='4' type='text'>
+          </div>
+          <div class='col-xs-4 form-group cvc required'>
+            <label class='control-label'>CVC</label>
+            <input v-model="cardDetails.cvc" autocomplete='off' class='form-control card-cvc' placeholder='ex. 311' size='3' type='text'>
+          </div>
         </div>
 
-        <div>
-          <input type="text" class="card-expiry text fullwidth" name="expiry" value="01/2025" autocomplete="off" placeholder="MM / YYYY" dir="ltr">
-
-          <input type="tel" class="card-cvc text fullwidth" name="cvv" value="123" autocomplete="off" placeholder="CVV" dir="ltr">
-        </div>
+        <input type="button" class="btn btn-lg" @click.prevent="submitForm()" value="Make Payment"/>
       </div>
-
-
-
-
-    </fieldset>
+    </form>
 
   </div>
 </template>
 
 <script>
 export default {
-  name: "PaymentForm"
+  name: "PaymentForm",
+  props: {
+    orderData: Object
+  },
   data() {
     return {
-      firstName:
+      firstName: null,
+      lastName: null,
+      cardDetails: {
+        number: null,
+        month: null,
+        year: null,
+        cvc: null
+      }
+    }
+  },
+  methods: {
+    submitForm() {
+      let self = this;
+      axios.post("/actions/commerce/payments/pay", this.cardDetails, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }).then((response) => {
+        console.log(response)
+      }).catch(function (error) {
+
+      });
     }
   }
 }

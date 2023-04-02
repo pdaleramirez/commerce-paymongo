@@ -11,29 +11,34 @@ class PayMongoRequestResponse implements RequestResponseInterface
      */
     protected array $data = [];
 
-    public function __construct(array $data)
+    public function __construct(array $data = [])
     {
         $this->data = $data;
     }
 
     public function isSuccessful(): bool
     {
-        return true;
+        $data = $this->data['attributes'];
+
+        if ($data['status'] === 'succeeded') return true;
+
+        return false;
     }
 
     public function isProcessing(): bool
     {
-        return true;
+        return false;
     }
 
     public function isRedirect(): bool
     {
-        return false;
+        $attributes = $this->data['attributes'];
+        return isset($attributes['next_action']);
     }
 
     public function getRedirectMethod(): string
     {
-        return '';
+        return 'GET';
     }
 
     public function getRedirectData(): array
@@ -43,6 +48,12 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getRedirectUrl(): string
     {
+        $nextAction = $this->data['attributes']['next_action'];
+
+        if ($nextAction !== null) {
+            return $nextAction['redirect']['url'];
+        }
+
         return '';
     }
 
@@ -58,16 +69,22 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getData(): mixed
     {
-        return [];
+        return $this->data;
     }
 
     public function getMessage(): string
     {
-        return "Payment is a success";
+        $data = $this->data['attributes'];
+
+        if ($data['status'] === 'succeeded') {
+            return \Craft::t('commerce-paymongo', "Payment has succeeded.");
+        }
+
+        return \Craft::t('commerce-paymongo', "Payment authentication has failed or encountered an error.");
     }
 
     public function redirect(): void
     {
-        // TODO: Implement redirect() method.
+
     }
 }

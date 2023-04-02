@@ -1,10 +1,6 @@
 {% import "_includes/forms" as forms %}
-<div id="paymongo-payment-form">
 
-    <payment-form></payment-form>
-</div>
 <fieldset class="card-holder">
-    <h1>PayMongo Form</h1>
     <legend>{{ 'Card Holder'|t('commerce') }}</legend>
 
     <div class="md:flex md:-mx-4">
@@ -53,7 +49,7 @@
                 maxlength: 19,
                 placeholder: "Card Number"|t('commerce'),
                 autocomplete: false,
-                class: 'card-number'~(paymentForm.getErrors('number') ? ' error'),
+                class: 'card-number'~(paymentForm.getErrors('cardNumber') ? ' error'),
                 value: paymentForm.number
             }) }}
 
@@ -79,10 +75,19 @@
     </div>
 
     {% set errors = [] %}
-    {% for attributeKey in ['number', 'month', 'year', 'cvv'] %}
+    {% for attributeKey in ['cardNumber', 'month', 'year', 'cvv'] %}
         {% set errors = errors|merge(paymentForm.getErrors(attributeKey)) %}
     {% endfor %}
 
     {{ forms.errorList(errors) }}
 
 </fieldset>
+
+{% set paymentFormId = "id=paymongo-payment-form" %} {# force removing of twig namespace for app mount  #}
+{#<div {{ paymentFormId }}>#}
+{#    {% set orderData = {#}
+{#        orderNumber: craft.commerce.carts.cart.number,#}
+{#        gatewayId: craft.commerce.carts.cart.gatewayId#}
+{#    } %}#}
+{#    <payment-form :order-data="{{ orderData|json_encode }}"></payment-form>#}
+{#</div>#}
