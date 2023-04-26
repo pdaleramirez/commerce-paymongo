@@ -81,6 +81,17 @@
 
     {{ forms.errorList(errors) }}
 
+    <label class="block cursor-pointer mt-3 border-blue-300 border-b-2 px-6 py-4 rounded-md shadow-md hover:shadow-lg">
+      <span class="flex justify-start items-center">
+        <span class="pr-3">
+          {{ input('radio', 'type', "gcash") }}
+        </span>
+        <span>
+          <strong>GCASH</strong>
+          <br><span class="text-gray-600">{{ 'E-wallet'|t }}</span>
+        </span>
+      </span>
+    </label>
 </fieldset>
 
 {% set paymentFormId = "id=paymongo-payment-form" %} {# force removing of twig namespace for app mount  #}

@@ -19,7 +19,9 @@ use craft\commerce\models\payments\DummyPaymentForm;
 use craft\commerce\models\PaymentSource;
 use craft\commerce\models\responses\Dummy as DummyRequestResponse;
 use craft\commerce\models\responses\DummySubscriptionResponse;
+use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
+use pdaleramirez\commercepaymongo\models\payments\PayMongoPaymentForm;
 use pdaleramirez\commercepaymongo\models\responses\PayMongoRequestResponse;
 use craft\commerce\models\subscriptions\CancelSubscriptionForm;
 use craft\commerce\models\subscriptions\DummyPlan;
@@ -58,12 +60,13 @@ class PayMongo extends SubscriptionGateway
      * @var string
      */
     public $testMode;
+
     /**
      * @inheritdoc
      */
     public function getPaymentFormHtml(array $params): ?string
     {
-       Craft::$app->getView()->registerAssetBundle(VueAsset::class);
+        Craft::$app->getView()->registerAssetBundle(VueAsset::class);
 
         $paymentFormModel = $this->getPaymentFormModel();
 
@@ -95,9 +98,9 @@ class PayMongo extends SubscriptionGateway
     /**
      * @inheritdoc
      */
-    public function getPaymentFormModel(): DummyPaymentForm
+    public function getPaymentFormModel(): PayMongoPaymentForm
     {
-        return new DummyPaymentForm();
+        return new PayMongoPaymentForm();
     }
 
     /**
@@ -113,11 +116,7 @@ class PayMongo extends SubscriptionGateway
      */
     public function authorize(Transaction $transaction, BasePaymentForm $form): RequestResponseInterface
     {
-        if (!$form instanceof CreditCardPaymentForm) {
-            throw new InvalidArgumentException(sprintf('%s only accepts %s objects passed to $form.', __METHOD__, CreditCardPaymentForm::class));
-        }
-
-        return new PayMongoRequestResponse();
+        return $this->authorizeOrPurchase($transaction, $form, 'manual');
     }
 
     /**
@@ -125,7 +124,18 @@ class PayMongo extends SubscriptionGateway
      */
     public function capture(Transaction $transaction, string $reference): RequestResponseInterface
     {
-        return new PayMongoRequestResponse();
+        Plugin::getInstance()->getPayment()->setSecretKey($this->secret);
+        $amount = (int)number_format($transaction->amount, 2, '', '');
+        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents/' . $reference . '/capture', [
+            'attributes' => [
+                'amount' => $amount
+            ]
+        ]);
+
+        $paymentMethodContent = Json::decode($response->getBody()->getContents());
+        $paymentMethodContentData = $paymentMethodContent['data'];
+
+        return new PayMongoRequestResponse($paymentMethodContentData);
     }
 
     /**
@@ -145,12 +155,19 @@ class PayMongo extends SubscriptionGateway
         $transactionDecode = Json::decode($transaction->response);
 
         Plugin::getInstance()->getPayment()->setSecretKey($this->secret);
-        Plugin::getInstance()->getPayment()->setClientKey($transactionDecode['attributes']['client_key']);
-        $paymentIntent = Plugin::getInstance()->getPayment()->getPaymentIntent($transactionDecode['id']);
-        $paymentMethodContent = Json::decode($paymentIntent->getBody()->getContents());
 
-        $status = $paymentMethodContent['data']['attributes']['status'];
+        $clientKey = $transactionDecode['attributes']['client_key'] ?? null;
+        if ($clientKey !== null) {
+            Plugin::getInstance()->getPayment()->setClientKey($clientKey);
+        }
 
+        if ($transactionDecode['type'] === 'source') {
+            $response = Plugin::getInstance()->getPayment()->getSource($transactionDecode['id']);
+        } else {
+            $response = Plugin::getInstance()->getPayment()->getPaymentIntent($transactionDecode['id']);
+        }
+
+        $paymentMethodContent = Json::decode($response->getBody()->getContents());
 
         return new PayMongoRequestResponse($paymentMethodContent['data']);
     }
@@ -185,23 +202,30 @@ class PayMongo extends SubscriptionGateway
      */
     public function purchase(Transaction $transaction, BasePaymentForm $form): RequestResponseInterface
     {
+        return $this->authorizeOrPurchase($transaction, $form);
+    }
+
+    private function authorizeOrPurchase(Transaction $transaction, BasePaymentForm $form, $capture = 'automatic')
+    {
         Plugin::getInstance()->getPayment()->setSecretKey($this->secret);
 
-        $expiry = explode('/', $form->expiry);
+        $paymentMethodAttributes = [];
+        if ($form->type === 'gcash') {
+            $paymentMethodAttributes['attributes']['type'] = 'gcash';
+        } else {
+            $expiry = explode('/', $form->expiry);
+            $paymentMethodAttributes['attributes']['type'] = 'card';
 
-        $details = [
-            'card_number' => $form->number,
-            'exp_month' => (int) $expiry[0],
-            'exp_year' => (int) $expiry[1],
-            'cvc' => $form->cvv
-        ];
+            $paymentMethodAttributes['attributes']['details'] = [
+                'card_number' => $form->number,
+                'exp_month' => (int)$expiry[0],
+                'exp_year' => (int)$expiry[1],
+                'cvc' => $form->cvv
+            ];
+        }
 
-        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_methods', [
-            'attributes' => [
-                'type' => 'card',
-                'details' => $details
-            ]
-        ]);
+        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_methods', $paymentMethodAttributes);
+
         $paymentMethodContent = Json::decode($response->getBody()->getContents());
         $paymentMethodId = $paymentMethodContent['data']['id'];
 
@@ -210,16 +234,14 @@ class PayMongo extends SubscriptionGateway
         $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents', [
             'attributes' => [
                 'amount' => (int)$amount,
-                'payment_method_allowed' => ['card'],
-                'currency' => 'PHP'
+                'payment_method_allowed' => ['card', 'gcash'],
+                'currency' => 'PHP',
+                'capture_type' => $capture
             ]
         ]);
 
         $paymentIntentContent = Json::decode($response->getBody()->getContents());;
         $paymentIntentId = $paymentIntentContent['data']['id'];
-
-        Craft::$app->getSession()->set('payMongoPaymentIntentId', $paymentIntentId);
-        $paymentIntentClientKey = $paymentIntentContent['data']['attributes']['client_key'];
 
         $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents/' . $paymentIntentId . '/attach', [
             'attributes' => [
@@ -232,7 +254,10 @@ class PayMongo extends SubscriptionGateway
         $paymentMethodContentData = $paymentMethodContent['data'];
         $status = $paymentMethodContentData['attributes']['status'];
 
-        if ($status === 'awaiting_next_action') {
+        if ($status === 'awaiting_next_action' || ($status === 'pending'
+                && isset($paymentMethodContentData['attributes']['type'])
+                && $paymentMethodContentData['attributes']['type'] === 'gcash'
+            )) {
 
             return new PayMongoRequestResponse($paymentMethodContentData);
         }
@@ -257,15 +282,25 @@ class PayMongo extends SubscriptionGateway
      */
     public function refund(Transaction $transaction): RequestResponseInterface
     {
-        $form = new DummyPaymentForm();
+        $response = Json::decode($transaction->parent->response);
+        $payment = ArrayHelper::firstValue($response['attributes']['payments']);
 
-        if ($transaction->note != 'fail') {
-            $form->number = '4242424242424242';
-        } else {
-            $form->number = '378282246310005';
-        }
+        $paymentId = $payment['id'];
+        $amount = (int)number_format($transaction->amount, 2, '', '');
+        Plugin::getInstance()->getPayment()->setSecretKey($this->secret);
+        $response = Plugin::getInstance()->getPayment()->payMongoRequest('refunds', [
+            'attributes' => [
+                'amount' => $amount,
+                'payment_id' => $paymentId,
+                'reason' => 'requested_by_customer',
+            ]
+        ]);
 
-        return new DummyRequestResponse($form);
+        $paymentMethodContent = Json::decode($response->getBody()->getContents());
+        $paymentMethodContentData = $paymentMethodContent['data'];
+
+
+        return new PayMongoRequestResponse($paymentMethodContentData);
     }
 
     /**

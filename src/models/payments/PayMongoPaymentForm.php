@@ -13,6 +13,9 @@ use craft\commerce\models\PaymentSource;
  */
 class PayMongoPaymentForm extends CreditCardPaymentForm
 {
+
+    public ?string $type = null;
+
     public function populateFromPaymentSource(PaymentSource $paymentSource): void
     {
         $this->token = (string)$paymentSource->id;

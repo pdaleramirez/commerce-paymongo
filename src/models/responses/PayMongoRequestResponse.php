@@ -18,9 +18,11 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function isSuccessful(): bool
     {
-        $data = $this->data['attributes'];
+        $attributes = $this->data['attributes'];
+        $type = $this->data['type'];
 
-        if ($data['status'] === 'succeeded') return true;
+        if ($attributes['status'] === 'succeeded' || ($type === 'refund' && $attributes['status'] === 'pending')) return true;
+
 
         return false;
     }
@@ -33,7 +35,8 @@ class PayMongoRequestResponse implements RequestResponseInterface
     public function isRedirect(): bool
     {
         $attributes = $this->data['attributes'];
-        return isset($attributes['next_action']);
+
+        return (isset($attributes['next_action']) || ($attributes['status'] === 'pending'));
     }
 
     public function getRedirectMethod(): string
@@ -48,7 +51,9 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getRedirectUrl(): string
     {
-        $nextAction = $this->data['attributes']['next_action'];
+        $attributes = $this->data['attributes'];
+
+        $nextAction = $attributes['next_action'] ?? null;
 
         if ($nextAction !== null) {
             return $nextAction['redirect']['url'];
@@ -59,7 +64,11 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getTransactionReference(): string
     {
-        return '';
+        if (empty($this->data)) {
+            return '';
+        }
+
+        return (string)$this->data['id'];
     }
 
     public function getCode(): string
@@ -74,10 +83,17 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getMessage(): string
     {
-        $data = $this->data['attributes'];
+        $attributes = $this->data['attributes'];
+        $type = $this->data['type'];
 
-        if ($data['status'] === 'succeeded') {
+        if ($attributes['status'] === 'succeeded' || ($type === 'refund' && $attributes['status'] === 'pending')) {
             return \Craft::t('commerce-paymongo', "Payment has succeeded.");
+        }
+
+        $failedMessage = $attributes['last_payment_error']['failed_message'] ?? null;
+
+        if ($failedMessage !== null) {
+            return $failedMessage;
         }
 
         return \Craft::t('commerce-paymongo', "Payment authentication has failed or encountered an error.");
