@@ -27,7 +27,6 @@ use craft\helpers\StringHelper;
 use craft\web\Response as WebResponse;
 use craft\web\View;
 use pdaleramirez\commercepaymongo\Plugin;
-use pdaleramirez\commercepaymongo\web\assets\VueAsset;
 use yii\base\NotSupportedException;
 
 /**
@@ -63,8 +62,6 @@ class PayMongo extends Gateway
      */
     public function getPaymentFormHtml(array $params): ?string
     {
-        Craft::$app->getView()->registerAssetBundle(VueAsset::class);
-
         $paymentFormModel = $this->getPaymentFormModel();
 
         if (Craft::$app->getConfig()->general->devMode) {
