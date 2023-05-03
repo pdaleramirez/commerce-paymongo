@@ -26,7 +26,7 @@ class PayMongoPaymentForm extends CreditCardPaymentForm
      */
     protected function defineRules(): array
     {
-        if ($this->token) {
+        if ($this->token || $this->type !== 'card') {
             return []; //No validation of form if using a token
         }
 

@@ -1,0 +1,24 @@
+{% import "_includes/forms" as forms %}
+
+<fieldset class="card-holder">
+    <label class="block cursor-pointer mt-3 border-blue-300 border-b-2 px-6 py-4 rounded-md shadow-md hover:shadow-lg">
+      <span class="flex justify-start items-center">
+        <span class="pr-3">
+            {{ hiddenInput('type', 'gcash') }}
+        </span>
+        <span>
+          <strong>GCASH</strong>
+          <br><span class="text-gray-600">{{ 'E-wallet'|t }}</span>
+        </span>
+      </span>
+    </label>
+</fieldset>
+
+{% set paymentFormId = "id=paymongo-payment-form" %} {# force removing of twig namespace for app mount  #}
+{#<div {{ paymentFormId }}>#}
+{#    {% set orderData = {#}
+{#        orderNumber: craft.commerce.carts.cart.number,#}
+{#        gatewayId: craft.commerce.carts.cart.gatewayId#}
+{#    } %}#}
+{#    <payment-form :order-data="{{ orderData|json_encode }}"></payment-form>#}
+{#</div>#}

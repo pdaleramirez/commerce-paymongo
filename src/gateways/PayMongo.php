@@ -1,50 +1,42 @@
 <?php
+
 /**
- * @link https://craftcms.com/
- * @copyright Copyright (c) Pixel & Tonic, Inc.
- * @license https://craftcms.github.io/license/
+ * Commerce PayMongo Gateway plugin for Craft CMS 4.x
+ *
+ * Search elements with filter using Vue JS
+ *
+ * @link      https://github.com/pdaleramirez
+ * @copyright Copyright (c) 2023 Dale Ramirez
  */
 
 namespace pdaleramirez\commercepaymongo\gateways;
 
 use Craft;
-use craft\commerce\base\Plan;
+use craft\commerce\base\Gateway;
 use craft\commerce\base\RequestResponseInterface;
-use craft\commerce\base\SubscriptionGateway;
-use craft\commerce\base\SubscriptionResponseInterface;
-use craft\commerce\elements\Subscription;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
-use craft\commerce\models\payments\DummyPaymentForm;
 use craft\commerce\models\PaymentSource;
-use craft\commerce\models\responses\Dummy as DummyRequestResponse;
-use craft\commerce\models\responses\DummySubscriptionResponse;
 use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
 use pdaleramirez\commercepaymongo\models\payments\PayMongoPaymentForm;
 use pdaleramirez\commercepaymongo\models\responses\PayMongoRequestResponse;
-use craft\commerce\models\subscriptions\CancelSubscriptionForm;
-use craft\commerce\models\subscriptions\DummyPlan;
-use craft\commerce\models\subscriptions\SubscriptionForm;
-use craft\commerce\models\subscriptions\SwitchPlansForm;
 use craft\commerce\models\Transaction;
-use craft\elements\User;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\web\Response as WebResponse;
 use craft\web\View;
-use http\Exception\InvalidArgumentException;
 use pdaleramirez\commercepaymongo\Plugin;
 use pdaleramirez\commercepaymongo\web\assets\VueAsset;
 use yii\base\NotSupportedException;
 
 /**
- * Dummy represents a dummy gateway.
+ * PayMongo represents a PayMongo gateway.
  *
- * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
- * @since 2.0
+ * @author Dale Ramirez <https://github.com/pdaleramirez>
+ * @since 1.0
  */
-class PayMongo extends SubscriptionGateway
+class PayMongo extends Gateway
 {
     /**
      * @var string
@@ -60,6 +52,11 @@ class PayMongo extends SubscriptionGateway
      * @var string
      */
     public $testMode;
+
+    /**
+     * @var string
+     */
+    public ?string $paymentGatewayType = null;
 
     /**
      * @inheritdoc
@@ -88,7 +85,13 @@ class PayMongo extends SubscriptionGateway
         $previousMode = $view->getTemplateMode();
         $view->setTemplateMode(View::TEMPLATE_MODE_CP);
 
-        $html = Craft::$app->getView()->renderTemplate('commerce-paymongo/_components/gateways/_creditCardFields', $params);
+        if ($this->paymentGatewayType === 'gcash') {
+            $html = Craft::$app->getView()->renderTemplate('commerce-paymongo/_components/gateways/_gcash', $params);
+        } else {
+            $html = Craft::$app->getView()->renderTemplate('commerce-paymongo/_components/gateways/_creditCardFields', $params);
+        }
+
+
 
         $view->setTemplateMode($previousMode);
 
@@ -263,7 +266,7 @@ class PayMongo extends SubscriptionGateway
         }
 
         if (!$form instanceof CreditCardPaymentForm) {
-            throw new InvalidArgumentException(sprintf('%s only accepts %s objects passed to $form.', __METHOD__, CreditCardPaymentForm::class));
+            throw new \InvalidArgumentException(sprintf('%s only accepts %s objects passed to $form.', __METHOD__, CreditCardPaymentForm::class));
         }
 
         return new PayMongoRequestResponse($paymentMethodContentData);
@@ -340,7 +343,7 @@ class PayMongo extends SubscriptionGateway
      */
     public function supportsPaymentSources(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -371,155 +374,6 @@ class PayMongo extends SubscriptionGateway
      * @inheritdoc
      */
     public function supportsWebhooks(): bool
-    {
-        return false;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getCancelSubscriptionFormHtml(Subscription $subscription): string
-    {
-        return '';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getCancelSubscriptionFormModel(): CancelSubscriptionForm
-    {
-        return new CancelSubscriptionForm();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getPlanSettingsHtml(array $params = []): ?string
-    {
-        return '<input type="hidden" name="reference" value="dummy.reference"/>';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getPlanModel(): Plan
-    {
-        return new DummyPlan();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSubscriptionFormModel(): SubscriptionForm
-    {
-        return new SubscriptionForm();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSwitchPlansFormModel(): SwitchPlansForm
-    {
-        return new SwitchPlansForm();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function cancelSubscription(Subscription $subscription, CancelSubscriptionForm $parameters): SubscriptionResponseInterface
-    {
-        $response = new DummySubscriptionResponse();
-        $response->setIsCanceled(true);
-        return $response;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getNextPaymentAmount(Subscription $subscription): string
-    {
-        return '-';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSubscriptionPayments(Subscription $subscription): array
-    {
-        return [];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSubscriptionPlanByReference(string $reference): string
-    {
-        return 'dummy.plan';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSubscriptionPlans(): array
-    {
-        return [];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function subscribe(User $user, Plan $plan, SubscriptionForm $parameters): SubscriptionResponseInterface
-    {
-        $subscription = new DummySubscriptionResponse();
-        $subscription->setTrialDays($parameters->trialDays);
-
-        return $subscription;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function switchSubscriptionPlan(Subscription $subscription, Plan $plan, SwitchPlansForm $parameters): SubscriptionResponseInterface
-    {
-        return new DummySubscriptionResponse();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsReactivation(): bool
-    {
-        return false;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function supportsPlanSwitch(): bool
-    {
-        return true;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getBillingIssueDescription(Subscription $subscription): string
-    {
-        return '';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getBillingIssueResolveFormHtml(Subscription $subscription): string
-    {
-        return '';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getHasBillingIssues(Subscription $subscription): bool
     {
         return false;
     }

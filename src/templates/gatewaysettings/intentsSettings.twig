@@ -1,17 +1,31 @@
-{% from "_includes/forms" import textField, lightswitchField, selectField, autosuggestField %}
+{% from "_includes/forms" import textField, lightswitchField, selectizeField, autosuggestField %}
+
+
+{{ selectizeField({
+  id: 'paymentType',
+  id: 'paymentType',
+  label: 'Payment Type'|t('commerce-paymongo'),
+  name: 'paymentGatewayType',
+  options: [
+    { value: 'card', label: 'Card' },
+    { value: 'gcash', label: 'GCASH' },
+  ],
+  value: gateway.paymentGatewayType,
+  errors: gateway.getErrors('paymentGatewayType')
+}) }}
 
 {{ autosuggestField({
-  label: 'Api Key'|t('depotise-module'),
+  label: 'Api Key'|t('commerce-paymongo'),
   id: 'apiKey',
   class: 'ltr',
   name: 'apiKey',
   suggestEnvVars: true,
   value: gateway.apiKey,
-  errors: gateway.getErrors('depotise-module')
+  errors: gateway.getErrors('commerce-paymongo')
 }) }}
 
 {{ autosuggestField({
-  label: "Secret"|t('depotise-module'),
+  label: "Secret"|t('commerce-paymongo'),
   id: 'secret',
   class: 'ltr',
   name: 'secret',
@@ -21,7 +35,7 @@
 }) }}
 
 {{ lightswitchField({
-  label: "Test mode?"|t('depotise-module'),
+  label: "Test mode?"|t('commerce-paymongo'),
   name: 'testMode',
   on: gateway.testMode,
   errors: gateway.getErrors('testMode'),
