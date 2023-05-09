@@ -2,7 +2,6 @@
     "name": "pdaleramirez/commerce-paymongo",
     "description": "PayMongo payment gateway integration.",
     "type": "craft-plugin",
-    "version": "1.0.1",
     "keywords": [
         "craft",
         "cms",
