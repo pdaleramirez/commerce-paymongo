@@ -1,6 +1,6 @@
 <p align="center"><img src="./src/icon.svg" width="100" height="100" alt="Commerce PayMongo icon"></p>
 
-<h1 align="center">Commerce PayMongo</h1>
+<h1 align="center">PayMongo for Craft Commerce</h1>
 
 This plugin provides a [PayMongo](https://www.paymongo.com/) integration for [Craft Commerce](https://craftcms.com/commerce).
 
