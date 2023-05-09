@@ -18,6 +18,10 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function isSuccessful(): bool
     {
+        $errors = $this->data['errors'] ?? null;
+
+        if ($errors !== null) return false;
+
         $attributes = $this->data['attributes'];
         $type = $this->data['type'];
 
@@ -34,6 +38,9 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function isRedirect(): bool
     {
+        $errors = $this->data['errors'] ?? null;
+        if ($errors !== null) return false;
+
         $attributes = $this->data['attributes'];
 
         return (isset($attributes['next_action']) || ($attributes['status'] === 'pending'));
@@ -51,6 +58,9 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getRedirectUrl(): string
     {
+        $errors = $this->data['errors'] ?? null;
+        if ($errors !== null) return false;
+
         $attributes = $this->data['attributes'];
 
         $nextAction = $attributes['next_action'] ?? null;
@@ -64,6 +74,9 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getTransactionReference(): string
     {
+        $errors = $this->data['errors'] ?? null;
+        if ($errors !== null) return '';
+
         if (empty($this->data)) {
             return '';
         }
@@ -83,6 +96,12 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getMessage(): string
     {
+
+        $errors = $this->data['errors'] ?? null;
+        if ($errors !== null && isset($errors[0])) {
+            return $errors[0]['detail'];
+        }
+
         $attributes = $this->data['attributes'];
         $type = $this->data['type'];
 

@@ -33,10 +33,3 @@
   value: gateway.secret,
   errors: gateway.getErrors('secret')
 }) }}
-
-{{ lightswitchField({
-  label: "Test mode?"|t('commerce-paymongo'),
-  name: 'testMode',
-  on: gateway.testMode,
-  errors: gateway.getErrors('testMode'),
-}) }}

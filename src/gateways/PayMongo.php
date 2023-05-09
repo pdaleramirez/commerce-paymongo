@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Commerce PayMongo Gateway plugin for Craft CMS 4.x
+ * PayMongo for Craft Commerce Gateway plugin for Craft CMS 4.x
  *
  * Search elements with filter using Vue JS
  *
@@ -207,6 +207,8 @@ class PayMongo extends Gateway
 
     private function authorizeOrPurchase(Transaction $transaction, BasePaymentForm $form, $capture = 'automatic')
     {
+        $baseCurrency = \craft\commerce\Plugin::getInstance()->getPaymentCurrencies()->getPrimaryPaymentCurrencyIso();
+
         Plugin::getInstance()->getPayment()->setSecretKey($this->secret);
 
         $paymentMethodAttributes = [];
@@ -224,31 +226,45 @@ class PayMongo extends Gateway
             ];
         }
 
-        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_methods', $paymentMethodAttributes);
+        try {
+            $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_methods', $paymentMethodAttributes);
+        } catch (\Exception $exception) {
+
+        }
+
 
         $paymentMethodContent = Json::decode($response->getBody()->getContents());
         $paymentMethodId = $paymentMethodContent['data']['id'];
 
         $amount = number_format($transaction->amount, 2, '', '');
 
-        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents', [
-            'attributes' => [
-                'amount' => (int)$amount,
-                'payment_method_allowed' => ['card', 'gcash'],
-                'currency' => 'PHP',
-                'capture_type' => $capture
-            ]
-        ]);
+        try {
+            $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents', [
+                'attributes' => [
+                    'amount' => (int)$amount,
+                    'payment_method_allowed' => ['card', 'gcash'],
+                    'currency' => env('PAYMONGO_PHP') ? "PHP" : $baseCurrency,
+                    'capture_type' => $capture
+                ]
+            ]);
+        } catch (\Exception $exception) {
+            $body = Json::decode($exception->getResponse()->getBody()->getContents());
+            return new PayMongoRequestResponse($body);
+        }
+
 
         $paymentIntentContent = Json::decode($response->getBody()->getContents());;
         $paymentIntentId = $paymentIntentContent['data']['id'];
-
-        $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents/' . $paymentIntentId . '/attach', [
-            'attributes' => [
-                'payment_method' => $paymentMethodId,
-                'return_url' => UrlHelper::actionUrl('commerce/payments/complete-payment', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]),
-            ]
-        ]);
+       // try {
+            $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents/' . $paymentIntentId . '/attach', [
+                'attributes' => [
+                    'payment_method' => $paymentMethodId,
+                    'return_url' => UrlHelper::actionUrl('commerce/payments/complete-payment', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]),
+                ]
+            ]);
+//        } catch (\Exception $exception) {
+//           // return 'sas ' . $exception->getMessage();
+//        }
 
         $paymentMethodContent = Json::decode($response->getBody()->getContents());
         $paymentMethodContentData = $paymentMethodContent['data'];
