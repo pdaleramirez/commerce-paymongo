@@ -33,7 +33,7 @@
         }
     },
     "extra": {
-        "name": "Commerce PayMongo",
+        "name": "PayMongo for Craft Commerce",
         "handle": "commerce-paymongo",
         "developer": "Dale Ramirez",
         "developerUrl": "https://github.com/pdaleramirez",

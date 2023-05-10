@@ -1,4 +1,4 @@
-# The Commerce PayMongo Craft License
+# The PayMongo for Craft Commerce Craft License
 
 Copyright © pdaleramirez 
 

@@ -1,4 +1,4 @@
-<p align="center"><img src="./src/icon.svg" width="100" height="100" alt="Commerce PayMongo icon"></p>
+<p align="center"><img src="./src/icon.svg" width="100" height="100" alt="PayMongo for Craft Commerce icon"></p>
 
 <h1 align="center">PayMongo for Craft Commerce</h1>
 
@@ -14,7 +14,7 @@ You can install this plugin from the Plugin Store or with Composer.
 
 #### From the Plugin Store
 
-Go to the Plugin Store in your project’s Control Panel and search for “Commerce PayMongo”. Then click on the “Install” button in its modal window.
+Go to the Plugin Store in your project’s Control Panel and search for “PayMongo for Craft Commerce”. Then click on the “Install” button in its modal window.
 
 #### With Composer
 
