@@ -1,6 +1,9 @@
 # Release Notes for PayMongo for Craft Commerce
 
-## 1.0.11 - 2023-05-10
+## 1.0.12 - 2023-05-10
+- Modified composer requirement
+
+- ## 1.0.11 - 2023-05-10
 - Changed Commerce PayMongo to PayMongo for Craft Commerce title
 
 ## 1.0.1 - 2023-05-09
