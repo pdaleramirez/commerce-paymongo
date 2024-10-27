@@ -17,6 +17,7 @@ use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\payments\CreditCardPaymentForm;
 use craft\commerce\models\PaymentSource;
+use craft\helpers\App;
 use craft\helpers\ArrayHelper;
 use craft\helpers\UrlHelper;
 use pdaleramirez\commercepaymongo\models\payments\PayMongoPaymentForm;
@@ -243,7 +244,7 @@ class PayMongo extends Gateway
                 'attributes' => [
                     'amount' => (int)$amount,
                     'payment_method_allowed' => ['card', 'gcash'],
-                    'currency' => env('PAYMONGO_PHP') ? "PHP" : $baseCurrency,
+                    'currency' => App::env('PAYMONGO_PHP') ? "PHP" : $baseCurrency,
                     'capture_type' => $capture
                 ]
             ]);
