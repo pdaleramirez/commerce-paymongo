@@ -1,5 +1,8 @@
 # Release Notes for PayMongo for Craft Commerce
 
+## 2.0.0 - 2024-10-27
+- Added support for Craft 5
+
 ## 1.0.12 - 2023-05-10
 - Modified composer requirement
 
