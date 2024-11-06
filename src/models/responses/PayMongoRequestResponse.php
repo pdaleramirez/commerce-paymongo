@@ -96,7 +96,6 @@ class PayMongoRequestResponse implements RequestResponseInterface
 
     public function getMessage(): string
     {
-
         $errors = $this->data['errors'] ?? null;
         if ($errors !== null && isset($errors[0])) {
             return $errors[0]['detail'];
@@ -121,5 +120,18 @@ class PayMongoRequestResponse implements RequestResponseInterface
     public function redirect(): void
     {
 
+    }
+
+    /**
+     * @param $error
+     * @return void
+     */
+    public function setError($error): void
+    {
+        $this->data['errors'] = [
+            [
+                'detail' => $error
+            ]
+        ];
     }
 }

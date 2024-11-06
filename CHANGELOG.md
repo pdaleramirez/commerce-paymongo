@@ -1,5 +1,8 @@
 # Release Notes for PayMongo for Craft Commerce
 
+## 2.0.1 - 2024-11-06
+- Added support for error API respobse
+
 ## 2.0.0 - 2024-10-27
 - Added support for Craft 5
 

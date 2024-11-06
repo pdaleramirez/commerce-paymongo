@@ -90,7 +90,6 @@ class PayMongo extends Gateway
         }
 
 
-
         $view->setTemplateMode($previousMode);
 
         return $html;
@@ -230,9 +229,10 @@ class PayMongo extends Gateway
         try {
             $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_methods', $paymentMethodAttributes);
         } catch (\Exception $exception) {
+          $content = $exception->getResponse()->getBody()->getContents();
 
+          return $this->getError($content);
         }
-
 
         $paymentMethodContent = Json::decode($response->getBody()->getContents());
         $paymentMethodId = $paymentMethodContent['data']['id'];
@@ -256,16 +256,17 @@ class PayMongo extends Gateway
 
         $paymentIntentContent = Json::decode($response->getBody()->getContents());;
         $paymentIntentId = $paymentIntentContent['data']['id'];
-       // try {
+        try {
             $response = Plugin::getInstance()->getPayment()->payMongoRequest('payment_intents/' . $paymentIntentId . '/attach', [
                 'attributes' => [
                     'payment_method' => $paymentMethodId,
                     'return_url' => UrlHelper::actionUrl('commerce/payments/complete-payment', ['commerceTransactionId' => $transaction->id, 'commerceTransactionHash' => $transaction->hash]),
                 ]
             ]);
-//        } catch (\Exception $exception) {
-//           // return 'sas ' . $exception->getMessage();
-//        }
+        } catch (\Exception $exception) {
+            $content = $exception->getResponse()->getBody()->getContents();
+            return $this->getError($content);
+        }
 
         $paymentMethodContent = Json::decode($response->getBody()->getContents());
         $paymentMethodContentData = $paymentMethodContent['data'];
@@ -276,7 +277,9 @@ class PayMongo extends Gateway
                 && $paymentMethodContentData['attributes']['type'] === 'gcash'
             )) {
 
-            return new PayMongoRequestResponse($paymentMethodContentData);
+            $response = new PayMongoRequestResponse($paymentMethodContentData);
+
+            return $response;
         }
 
         if (!$form instanceof CreditCardPaymentForm) {
@@ -289,7 +292,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function processWebHook(): WebResponse
+    public
+    function processWebHook(): WebResponse
     {
         throw new NotSupportedException(__CLASS__ . ' does not support processWebhook()');
     }
@@ -297,7 +301,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function refund(Transaction $transaction): RequestResponseInterface
+    public
+    function refund(Transaction $transaction): RequestResponseInterface
     {
         $response = Json::decode($transaction->parent->response);
         $payment = ArrayHelper::firstValue($response['attributes']['payments']);
@@ -323,7 +328,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsAuthorize(): bool
+    public
+    function supportsAuthorize(): bool
     {
         return true;
     }
@@ -331,7 +337,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsCapture(): bool
+    public
+    function supportsCapture(): bool
     {
         return true;
     }
@@ -339,7 +346,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsCompleteAuthorize(): bool
+    public
+    function supportsCompleteAuthorize(): bool
     {
         return true;
     }
@@ -347,7 +355,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsCompletePurchase(): bool
+    public
+    function supportsCompletePurchase(): bool
     {
         return true;
     }
@@ -355,7 +364,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsPaymentSources(): bool
+    public
+    function supportsPaymentSources(): bool
     {
         return false;
     }
@@ -363,7 +373,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsPurchase(): bool
+    public
+    function supportsPurchase(): bool
     {
         return true;
     }
@@ -371,7 +382,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsRefund(): bool
+    public
+    function supportsRefund(): bool
     {
         return true;
     }
@@ -379,7 +391,8 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsPartialRefund(): bool
+    public
+    function supportsPartialRefund(): bool
     {
         return true;
     }
@@ -387,8 +400,24 @@ class PayMongo extends Gateway
     /**
      * @inheritdoc
      */
-    public function supportsWebhooks(): bool
+    public
+    function supportsWebhooks(): bool
     {
         return false;
+    }
+
+    /**
+     * @param $content
+     * @return PayMongoRequestResponse
+     */
+    public function getError($content): PayMongoRequestResponse
+    {
+        $body = Json::decode($content);
+        $request = new PayMongoRequestResponse();
+        $detail = $body['errors'][0]['detail'] ?? null;
+        $detail = str_replace('details.', '', $detail);
+        $detail = ucfirst(str_replace('_', ' ', $detail));
+        $request->setError($detail);
+        return $request;
     }
 }
